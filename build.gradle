@@ -1,0 +1,69 @@
+buildscript {
+    repositories {
+        maven { url "https://repo.spring.io/libs-milestone" }
+	jcenter()
+    }
+    dependencies {
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.3.2.RELEASE'
+    	classpath 'org.hidetake:gradle-ssh-plugin:1.2.0'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'spring-boot'
+apply plugin: 'org.hidetake.ssh'
+
+group = 'org.pedrero'
+version = '1.0'
+
+description = "FBWatcher"
+
+
+remotes {
+  raspberrypi {
+    host = 'raspberrypi'
+    user = 'pi'
+    identity = file('/home/mathieu/.ssh/id_rsa')
+
+  }
+}
+
+
+jar {
+    baseName = 'fb-watcher'
+    version =  '1.0'
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://repo.spring.io/libs-milestone" }
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile 'javax.mail:javax.mail-api:1.5.2'
+    compile 'com.sun.mail:javax.mail:1.5.2'
+    compile 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    compile 'org.springframework.boot:spring-boot-starter-mail'
+    compile 'org.springframework.social:spring-social-facebook'
+}
+
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.11'
+}
+
+
+task deploy << {
+  ssh.run {
+    session(remotes.raspberrypi) {
+      put from: 'build/libs/fb-watcher-1.0.jar', into: 'deliveries'
+      executeSudo '/opt/FbWatcher/bin/fbwatcherd stop'
+      executeSudo 'mv /home/pi/deliveries/fb-watcher-1.0.jar /opt/FbWatcher/bin/fb-watcher.jar'
+      executeSudo '/opt/FbWatcher/bin/fbwatcherd start'
+    }
+  }
+}
