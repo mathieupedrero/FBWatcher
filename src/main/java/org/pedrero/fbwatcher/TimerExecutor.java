@@ -7,7 +7,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.pedrero.fbwatcher.facebook.FacebookContext;
+import org.pedrero.fbwatcher.config.FBWatcherConfiguration;
+import org.pedrero.fbwatcher.config.Job;
+import org.pedrero.fbwatcher.config.Profile;
+import org.pedrero.fbwatcher.config.Token;
+import org.pedrero.fbwatcher.facebook.FacebookUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +28,10 @@ public class TimerExecutor {
 			.getLogger(TimerExecutor.class);
 
 	@Autowired
-	private FacebookContext facebookKeeper;
+	private RecipientsNotifier notifier;
 
 	@Autowired
-	private RecipientsNotifier notifier;
+	private FBWatcherConfiguration configuration;
 
 	@Value("${facebook.events_to_attend_filter}")
 	private String eventFilter;
@@ -59,59 +63,61 @@ public class TimerExecutor {
 	@Value("${messages.end.message}")
 	private String endMessage;
 
+	@Value("${facebook.should_attend}")
+	private Boolean shouldAttend;
+
 	private final Set<String> allreadyNotifiedEvents = new HashSet<>();
 
-	private String loggedUser;
-	private String pageWatched;
+	@Value("${notification.should_mail}")
+	private Boolean shouldMail;
+
+	@Value("${notification.should_sms}")
+	private Boolean shouldSms;
 
 	@Scheduled(cron = "*/5 * * * * ?")
 	public void demoServiceMethod() {
-		if (!facebookKeeper.getFacebookByToken().isEmpty()) {
-			Facebook facebook = facebookKeeper.getFacebookByToken().entrySet()
-					.iterator().next().getValue();
-			if (facebook.isAuthorized()) {
-				boolean isFirstLoop = false;
-				if (loggedUser == null) {
-					loggedUser = facebook.userOperations().getUserProfile()
-							.getName();
-					isFirstLoop = true;
-				}
-				if (pageWatched == null) {
-					pageWatched = facebook.pageOperations()
-							.getPage(pageWatchedId).getName();
-					notifyBeginning(pageWatched);
-				}
+		for (Job job : configuration.retrieveJobs()) {
+			Profile subscriber = job.getSubscriber();
+			if (subscriber.getToken()!=null){
+				Token token = subscriber.getToken();
+				Facebook facebook = FacebookUtils.buildFor(token.getToken());
+				if (facebook.isAuthorized()) {
+					String loggedUser = facebook.userOperations().getUserProfile()
+								.getName();
+					String pageWatched =facebook.pageOperations()
+								.getPage(pageWatchedId).getName();
 
-				List<Event> newFutureEvents = facebook
-						.fetchConnections(pageWatchedId, "events", Event.class)
-						.stream()
-						.filter(e -> e.getStartTime().after(
-								new java.util.Date()))
-						.filter(e -> !allreadyNotifiedEvents.contains(e.getId()))
-						.collect(Collectors.toList());
 
-				newFutureEvents.forEach(e -> allreadyNotifiedEvents.add(e
-						.getId()));
+					List<Event> newFutureEvents = facebook
+							.fetchConnections(pageWatchedId, "events", Event.class)
+							.stream()
+							.filter(e -> e.getStartTime().after(
+									new java.util.Date()))
+							.filter(e -> !allreadyNotifiedEvents.contains(e.getId()))
+							.collect(Collectors.toList());
 
-				List<Event> newFutureFilteredEvents = newFutureEvents.stream()
-						.filter(e -> eventNameMatchesFilter(e))
-						.collect(Collectors.toList());
+					newFutureEvents.forEach(e -> allreadyNotifiedEvents.add(e
+							.getId()));
 
-				for (Event event : newFutureEvents) {
-					if (newFutureFilteredEvents.contains(event)) {
-						facebook.eventOperations().acceptInvitation(
-								event.getId());
-						if (!isFirstLoop) {
-							notifyFilteredEvent(pageWatched, event.getName(),
-									event.getStartTime(), loggedUser);
-						}
-					} else {
-						if (!isFirstLoop) {
-							notifyNewEvent(pageWatched, event.getName(),
-									event.getStartTime());
+					List<Event> newFutureFilteredEvents = newFutureEvents.stream()
+							.filter(e -> eventNameMatchesFilter(e))
+							.collect(Collectors.toList());
+
+					for (Event event : newFutureEvents) {
+						if (newFutureFilteredEvents.contains(event)) {
+							if (shouldAttend) {
+								facebook.eventOperations().acceptInvitation(
+										event.getId());
+							}
+								notifyFilteredEvent(pageWatched, event.getName(),
+										event.getStartTime(), loggedUser);
+						} else {
+								notifyNewEvent(pageWatched, event.getName(),
+										event.getStartTime());
 						}
 					}
-				}
+				
+			}
 			}
 		}
 	}
@@ -149,7 +155,7 @@ public class TimerExecutor {
 		notify(title, message);
 	}
 
-	private void notify(String title, String message) {
+	private void notify(String title, String message, List<String>) {
 		LOGGER.info(message);
 		notifier.notify(title, message);
 	}

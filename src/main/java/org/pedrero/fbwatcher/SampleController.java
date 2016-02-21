@@ -1,16 +1,17 @@
 package org.pedrero.fbwatcher;
 
 import java.text.MessageFormat;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.pedrero.fbwatcher.communication.CommunicationService;
-import org.pedrero.fbwatcher.facebook.FacebookContext;
+import org.pedrero.fbwatcher.config.FBWatcherConfiguration;
 import org.pedrero.fbwatcher.facebook.FacebookUtils;
+import org.pedrero.fbwatcher.facebook.FacebookUtils.FacebookAccessToken;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.social.facebook.api.Event;
 import org.springframework.social.facebook.api.Facebook;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -32,6 +33,9 @@ public class SampleController {
 	@Autowired
 	private FacebookUtils facebookUtils;
 
+	@Autowired
+	private FBWatcherConfiguration configuration;
+
 	@Value("${facebook.required_scopes}")
 	private String requiredScopes;
 
@@ -50,9 +54,6 @@ public class SampleController {
 	@Value("${facebook.events_to_attend_filter}")
 	private String eventFilter;
 
-	@Autowired
-	private FacebookContext facebookKeeper;
-
 	@Value("${facebook.app.id}")
 	private String appId;
 
@@ -62,27 +63,18 @@ public class SampleController {
 	@Value("${facebook.redirect.uri}")
 	private String redirectUri;
 
+	@Value("#{'${notification.clients.rest}'.split(',')}")
+	private List<String> restClientsToNotify;
+
+	@Value("#{'${notification.clients.mail}'.split(',')}")
+	private List<String> mailAddressesToNotify;
+
 	@RequestMapping(method = RequestMethod.GET)
 	public String helloFacebook(Model model) {
-		if (facebookKeeper.getFacebookByToken().isEmpty()) {
+		if (configuration.retrieveJobs().isEmpty()) {
 			return MessageFormat.format("redirect:{0}", CommunicationService
 					.computeUrl(loginUrl, appId, redirectUri, requiredScopes));
 		}
-
-		Facebook facebook = facebookKeeper.getFacebookByToken().entrySet()
-				.iterator().next().getValue();
-
-		model.addAttribute(facebook.userOperations().getUserProfile());
-
-		facebookKeeper.setApplicationFacebook(facebook);
-
-		List<Event> events = facebook
-				.fetchConnections(pageToWatchID, "events", Event.class)
-				.stream()
-				.filter(e -> e.getStartTime().after(new java.util.Date()))
-				.collect(Collectors.toList());
-
-		model.addAttribute("event", events);
 
 		return "hello";
 	}
@@ -91,7 +83,18 @@ public class SampleController {
 	public RedirectView oauth2Callback(NativeWebRequest request) {
 		String code = request.getParameter("code");
 		LOGGER.info("Code={}", code);
-		facebookKeeper.addFacebookForCode(code);
+
+		FacebookAccessToken token = facebookUtils.retrieveTokenFor(code);
+		Facebook userFacebook = FacebookUtils.buildFor(token.getAccessToken());
+		String userId = userFacebook.userOperations().getUserProfile().getId();
+		configuration.addProfile(userId, mailAddressesToNotify,
+				restClientsToNotify);
+		Calendar predictedExpliracy = new GregorianCalendar();
+		predictedExpliracy
+				.add(Calendar.SECOND, token.getExpiresIn().intValue());
+		configuration.addTokenToProfile(token.getAccessToken(),
+				predictedExpliracy.getTime(), userId);
+		configuration.addJob(pageToWatchID, eventFilter, userId);
 		return new RedirectView("/");
 	}
 }

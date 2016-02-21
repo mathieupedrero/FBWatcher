@@ -1,5 +1,9 @@
 package org.pedrero.fbwatcher.facebook;
 
+import java.text.MessageFormat;
+import java.util.Date;
+
+import javax.annotation.PostConstruct;
 import javax.inject.Singleton;
 
 import org.pedrero.fbwatcher.communication.CommunicationService;
@@ -28,6 +32,14 @@ public class FacebookUtils {
 	@Value("${facebook.app.secret}")
 	private String appSecret;
 
+	private Facebook applicationFacebook;
+
+	@PostConstruct
+	private void postConstruct() {
+		applicationFacebook = new FacebookTemplate(MessageFormat.format(
+				"{0}|{1}", appId, appSecret));
+	}
+
 	public Facebook buildFacebookForToken(String token) {
 		return new FacebookTemplate(token);
 	}
@@ -46,7 +58,13 @@ public class FacebookUtils {
 		return facebookAccessToken;
 	}
 
+	public static Facebook buildFor(String token) {
+		return new FacebookTemplate(token);
+	}
+
 	public static class FacebookAccessToken {
+		private final Date requestDate = new Date();
+
 		@JsonProperty("access_token")
 		private String accessToken;
 
@@ -79,5 +97,13 @@ public class FacebookUtils {
 		public void setExpiresIn(Long expiresIn) {
 			this.expiresIn = expiresIn;
 		}
+
+		public Date getRequestDate() {
+			return requestDate;
+		}
+	}
+
+	public Facebook getApplicationFacebook() {
+		return applicationFacebook;
 	}
 }
