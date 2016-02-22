@@ -26,14 +26,12 @@ public class FBWatcherConfiguration {
 	@PostConstruct
 	private void postConstruct() {
 		String homePath = System.getProperty("user.home");
-		fullConfigFilePath = MessageFormat.format("{0}/{1}", homePath,
-				fullConfigFilePath);
-		configuration = XmlFileUtils.readFromFile(fullConfigFilePath,
-				RootConfiguration.class).orElse(new RootConfiguration());
+		fullConfigFilePath = MessageFormat.format("{0}/{1}", homePath, fullConfigFilePath);
+		configuration = XmlFileUtils.readFromFile(fullConfigFilePath, RootConfiguration.class).orElse(
+				new RootConfiguration());
 	}
 
-	public synchronized void addJob(String id, List<String> mailAddresses,
-			List<String> freeRestAddresses) {
+	public synchronized void addProfile(String id, List<String> mailAddresses, List<String> freeRestAddresses) {
 		Profile profile = new Profile(id);
 		profile.getMailAddresses().addAll(mailAddresses);
 		profile.getFreeRestAddresses().addAll(freeRestAddresses);
@@ -42,44 +40,29 @@ public class FBWatcherConfiguration {
 		XmlFileUtils.writeToFile(configuration, fullConfigFilePath);
 	}
 
-	public synchronized void addProfile(String id, List<String> mailAddresses,
-			List<String> freeRestAddresses) {
-		Profile profile = new Profile(id);
-		profile.getMailAddresses().addAll(mailAddresses);
-		profile.getFreeRestAddresses().addAll(freeRestAddresses);
-
-		configuration.getProfiles().add(profile);
-		XmlFileUtils.writeToFile(configuration, fullConfigFilePath);
-	}
-
-	public synchronized void addTokenToProfile(String token, Date expiracy,
-			String profileId) {
+	public synchronized void addTokenToProfile(String token, Date expiracy, String profileId) {
 		Token tokenObject = new Token(token);
 		tokenObject.setExpiracy(expiracy);
 
-		configuration.getProfiles().stream()
-				.filter(p -> Objects.equals(p.getId(), profileId)).findFirst()
+		configuration.getProfiles().stream().filter(p -> Objects.equals(p.getId(), profileId)).findFirst()
 				.ifPresent(p -> p.setToken(tokenObject));
 		XmlFileUtils.writeToFile(configuration, fullConfigFilePath);
 	}
 
 	public synchronized void revokeToken(String tokenToRevoke) {
-		configuration
-				.getProfiles()
-				.stream()
-				.filter(p -> p.getToken() != null
-						&& Objects.equals(p.getToken().getToken(),
-								tokenToRevoke)).forEach(p -> p.setToken(null));
+		configuration.getProfiles().stream()
+				.filter(p -> p.getToken() != null && Objects.equals(p.getToken().getToken(), tokenToRevoke))
+				.forEach(p -> p.setToken(null));
 		XmlFileUtils.writeToFile(configuration, fullConfigFilePath);
 	}
 
-	public synchronized void addJob(String pageId, String eventFilter,
-			String profileId) {
+	public synchronized void addJob(String pageId, String eventFilter, String profileId) {
 		Job job = new Job(pageId);
+		job.setPageId(pageId);
 		job.setEventFilter(eventFilter);
-		job.setSubscriber(configuration.getProfiles().stream()
-				.filter(p -> Objects.equals(p.getId(), profileId)).findFirst()
-				.orElse(null));
+
+		job.setSubscriber(configuration.getProfiles().stream().filter(p -> Objects.equals(p.getId(), profileId))
+				.findFirst().orElse(null));
 
 		configuration.getJobs().add(job);
 		XmlFileUtils.writeToFile(configuration, fullConfigFilePath);
@@ -88,14 +71,12 @@ public class FBWatcherConfiguration {
 	@SuppressWarnings("unchecked")
 	public synchronized List<Profile> retrieveProfiles() {
 		return (List<Profile>) SerializationUtils
-				.deserialize(SerializationUtils.serialize(configuration
-						.getProfiles()));
+				.deserialize(SerializationUtils.serialize(configuration.getProfiles()));
 	}
 
 	@SuppressWarnings("unchecked")
 	public synchronized List<Job> retrieveJobs() {
-		return (List<Job>) SerializationUtils.deserialize(SerializationUtils
-				.serialize(configuration.getProfiles()));
+		return (List<Job>) SerializationUtils.deserialize(SerializationUtils.serialize(configuration.getJobs()));
 	}
 
 }

@@ -1,8 +1,7 @@
-package org.pedrero.fbwatcher;
+package org.pedrero.fbwatcher.communication;
 
 import java.util.List;
 
-import org.pedrero.fbwatcher.communication.CommunicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

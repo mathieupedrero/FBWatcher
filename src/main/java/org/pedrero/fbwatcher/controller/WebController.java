@@ -1,4 +1,4 @@
-package org.pedrero.fbwatcher;
+package org.pedrero.fbwatcher.controller;
 
 import java.text.MessageFormat;
 import java.util.Calendar;
@@ -22,10 +22,10 @@ import org.springframework.web.servlet.view.RedirectView;
 
 @Controller
 @RequestMapping("/")
-public class SampleController {
+public class WebController {
 
 	private static final org.slf4j.Logger LOGGER = LoggerFactory
-			.getLogger(SampleController.class);
+			.getLogger(WebController.class);
 
 	@Autowired
 	private CommunicationService communicationService;

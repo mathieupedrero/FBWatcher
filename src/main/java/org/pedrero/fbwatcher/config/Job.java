@@ -15,18 +15,27 @@ public class Job implements Serializable {
 	 */
 	private static final long serialVersionUID = -6180752165457843151L;
 
-	private final String pageId;
+	private final String id;
+	private String pageId;
 	private String eventFilter;
 	private Profile subscriber;
 
-	public Job(String pageId) {
+	public Job(String jobId) {
 		super();
-		this.pageId = pageId;
+		this.id = jobId;
 	}
 
 	@XmlAttribute
+	public String getId() {
+		return id;
+	}
+
 	public String getPageId() {
 		return pageId;
+	}
+
+	public void setPageId(String pageId) {
+		this.pageId = pageId;
 	}
 
 	@XmlElement
@@ -61,7 +70,7 @@ public class Job implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		return Objects.equals(pageId, ((Job) obj).getPageId());
+		return Objects.equals(id, ((Job) obj).getId());
 	}
 
 }
