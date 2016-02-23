@@ -13,8 +13,12 @@ public class Token implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -6896083302298328376L;
-	private final String token;
+	private String token;
 	private Date expiration;
+
+	public Token() {
+		super();
+	}
 
 	public Token(String token) {
 		super();
@@ -24,6 +28,10 @@ public class Token implements Serializable {
 	@XmlAttribute
 	public String getToken() {
 		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
 	}
 
 	@XmlAttribute

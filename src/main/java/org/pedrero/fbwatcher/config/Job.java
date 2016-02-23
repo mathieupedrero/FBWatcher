@@ -15,7 +15,7 @@ public class Job implements Serializable {
 	 */
 	private static final long serialVersionUID = -6180752165457843151L;
 
-	private final String id;
+	private String id;
 	private String pageId;
 	private String eventFilter;
 	private Profile subscriber;
@@ -25,11 +25,20 @@ public class Job implements Serializable {
 		this.id = jobId;
 	}
 
+	public Job() {
+		super();
+	}
+
 	@XmlAttribute
 	public String getId() {
 		return id;
 	}
 
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	@XmlElement
 	public String getPageId() {
 		return pageId;
 	}

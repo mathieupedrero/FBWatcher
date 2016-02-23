@@ -16,7 +16,7 @@ public class Profile implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -6923235266006904340L;
-	private final String id;
+	private String id;
 	private final List<String> mailAddresses = new ArrayList<>();
 	private final List<String> freeRestAddresses = new ArrayList<>();
 	private Token token;
@@ -26,10 +26,18 @@ public class Profile implements Serializable {
 		this.id = id;
 	}
 
+	public Profile() {
+		super();
+	}
+
 	@XmlID
 	@XmlAttribute
 	public String getId() {
 		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	@XmlElement

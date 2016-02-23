@@ -3,6 +3,7 @@ package org.pedrero.fbwatcher.utils;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.Optional;
 
 import javax.xml.bind.JAXBContext;
@@ -15,8 +16,7 @@ import org.slf4j.LoggerFactory;
 
 public class XmlFileUtils {
 
-	private final static Logger LOGGER = LoggerFactory
-			.getLogger(XmlFileUtils.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(XmlFileUtils.class);
 
 	private XmlFileUtils() {
 		super();
@@ -28,18 +28,21 @@ public class XmlFileUtils {
 			existingFile.delete();
 		}
 		try {
-			JAXBContext context = JAXBContext
-					.newInstance(properties.getClass()); // 1
+			existingFile.getParentFile().mkdirs();
+			existingFile.createNewFile();
+			JAXBContext context = JAXBContext.newInstance(properties.getClass()); // 1
 			Marshaller marshaller = context.createMarshaller();
 			marshaller.marshal(properties, existingFile);
 		} catch (JAXBException e) {
 			LOGGER.error("Jaxb error", e);
+		} catch (IOException e) {
+			LOGGER.error("FS error", e);
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> Optional<T> readFromFile(String filePath,
-			Class<T> configClass) {
+	public static <T> Optional<T> readFromFile(String filePath, Class<T> configClass) {
+		LOGGER.info("Reading application configuration from [{}]", filePath);
 		File existingFile = new File(filePath);
 		if (!existingFile.exists()) {
 			return Optional.empty();
@@ -48,8 +51,7 @@ public class XmlFileUtils {
 		try {
 			JAXBContext context = JAXBContext.newInstance(configClass);
 			Unmarshaller unmarshaller = context.createUnmarshaller();
-			configuration = (T) unmarshaller.unmarshal(new FileReader(
-					existingFile));
+			configuration = (T) unmarshaller.unmarshal(new FileReader(existingFile));
 		} catch (FileNotFoundException e) {
 			LOGGER.error("File not found error", e);
 			return Optional.empty();

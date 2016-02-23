@@ -124,14 +124,12 @@ public class TimerExecutor {
 	private RuntimeJobData feedRuntimeForJob(RuntimeJobData runtime, Job job) {
 		Profile subscriber = job.getSubscriber();
 		if (subscriber != null) {
-			runtime.setPageName(facebookUtils.getApplicationFacebook().pageOperations().getPage(job.getPageId())
-					.getName());
-			runtime.setUserName(facebookUtils.getApplicationFacebook().userOperations()
-					.getUserProfile(subscriber.getId()).getName());
 			Token token = subscriber.getToken();
 			if (token != null) {
 				Facebook userFacebook = FacebookUtils.buildFor(token.getToken());
 				runtime.setUserFacebook(userFacebook);
+				runtime.setPageName(userFacebook.pageOperations().getPage(job.getPageId()).getName());
+				runtime.setUserName(userFacebook.userOperations().getUserProfile().getName());
 			} else {
 				LOGGER.warn("no valid token associated to user [{}]", subscriber.getId());
 			}

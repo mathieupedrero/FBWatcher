@@ -1,8 +1,8 @@
 package org.pedrero.fbwatcher.config;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -14,17 +14,17 @@ public class RootConfiguration implements Serializable {
 	 */
 	private static final long serialVersionUID = -2793110342968877462L;
 
-	private final Set<Job> jobs = new HashSet<>();
+	private final List<Job> jobs = new ArrayList<>();
 
-	private final Set<Profile> profiles = new HashSet<>();
+	private final List<Profile> profiles = new ArrayList<>();
 
 	@XmlElement
-	public Set<Job> getJobs() {
+	public List<Job> getJobs() {
 		return jobs;
 	}
 
 	@XmlElement
-	public Set<Profile> getProfiles() {
+	public List<Profile> getProfiles() {
 		return profiles;
 	}
 

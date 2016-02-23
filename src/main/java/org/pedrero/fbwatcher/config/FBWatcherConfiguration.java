@@ -1,7 +1,5 @@
 package org.pedrero.fbwatcher.config;
 
-import groovy.lang.Singleton;
-
 import java.text.MessageFormat;
 import java.util.Date;
 import java.util.List;
@@ -11,9 +9,10 @@ import javax.annotation.PostConstruct;
 
 import org.pedrero.fbwatcher.utils.XmlFileUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.util.SerializationUtils;
 
-@Singleton
+@Component
 public class FBWatcherConfiguration {
 
 	private RootConfiguration configuration;
@@ -26,7 +25,7 @@ public class FBWatcherConfiguration {
 	@PostConstruct
 	private void postConstruct() {
 		String homePath = System.getProperty("user.home");
-		fullConfigFilePath = MessageFormat.format("{0}/{1}", homePath, fullConfigFilePath);
+		fullConfigFilePath = MessageFormat.format("{0}/{1}", homePath, homeConfigFilePath);
 		configuration = XmlFileUtils.readFromFile(fullConfigFilePath, RootConfiguration.class).orElse(
 				new RootConfiguration());
 	}

@@ -4,17 +4,17 @@ import java.text.MessageFormat;
 import java.util.Date;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Singleton;
 
 import org.pedrero.fbwatcher.communication.CommunicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.social.facebook.api.Facebook;
 import org.springframework.social.facebook.api.impl.FacebookTemplate;
+import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Singleton
+@Service
 public class FacebookUtils {
 
 	@Autowired
@@ -36,8 +36,7 @@ public class FacebookUtils {
 
 	@PostConstruct
 	private void postConstruct() {
-		applicationFacebook = new FacebookTemplate(MessageFormat.format(
-				"{0}|{1}", appId, appSecret));
+		applicationFacebook = new FacebookTemplate(MessageFormat.format("{0}|{1}", appId, appSecret));
 	}
 
 	public Facebook buildFacebookForToken(String token) {
@@ -45,16 +44,14 @@ public class FacebookUtils {
 	}
 
 	public FacebookAccessToken refreshToken(String token) {
-		FacebookAccessToken facebookAccessToken = communicationService
-				.getForObject(getTokenUrl, FacebookAccessToken.class, appId,
-						redirectUri, appSecret, token);
+		FacebookAccessToken facebookAccessToken = communicationService.getForObject(getTokenUrl,
+				FacebookAccessToken.class, appId, redirectUri, appSecret, token);
 		return facebookAccessToken;
 	}
 
 	public FacebookAccessToken retrieveTokenFor(String code) {
-		FacebookAccessToken facebookAccessToken = communicationService
-				.getForObject(getTokenUrl, FacebookAccessToken.class, appId,
-						redirectUri, appSecret, code);
+		FacebookAccessToken facebookAccessToken = communicationService.getForObject(getTokenUrl,
+				FacebookAccessToken.class, appId, redirectUri, appSecret, code);
 		return facebookAccessToken;
 	}
 
