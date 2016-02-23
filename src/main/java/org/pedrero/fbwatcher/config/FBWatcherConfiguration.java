@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
@@ -68,14 +69,13 @@ public class FBWatcherConfiguration {
 	}
 
 	@SuppressWarnings("unchecked")
-	public synchronized List<Profile> retrieveProfiles() {
-		return (List<Profile>) SerializationUtils
-				.deserialize(SerializationUtils.serialize(configuration.getProfiles()));
+	public synchronized Set<Profile> retrieveProfiles() {
+		return (Set<Profile>) SerializationUtils.deserialize(SerializationUtils.serialize(configuration.getProfiles()));
 	}
 
 	@SuppressWarnings("unchecked")
-	public synchronized List<Job> retrieveJobs() {
-		return (List<Job>) SerializationUtils.deserialize(SerializationUtils.serialize(configuration.getJobs()));
+	public synchronized Set<Job> retrieveJobs() {
+		return (Set<Job>) SerializationUtils.deserialize(SerializationUtils.serialize(configuration.getJobs()));
 	}
 
 }
