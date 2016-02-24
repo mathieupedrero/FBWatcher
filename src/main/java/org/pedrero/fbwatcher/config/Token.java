@@ -5,7 +5,9 @@ import java.util.Date;
 import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSchemaType;
 
 @XmlRootElement
 public class Token implements Serializable {
@@ -34,7 +36,8 @@ public class Token implements Serializable {
 		this.token = token;
 	}
 
-	@XmlAttribute
+	@XmlElement
+	@XmlSchemaType(name = "datetime")
 	public Date getExpiration() {
 		return expiration;
 	}
