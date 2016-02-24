@@ -56,9 +56,10 @@ public class FBWatcherConfiguration {
 		XmlFileUtils.writeToFile(configuration, fullConfigFilePath);
 	}
 
-	public synchronized void addJob(String pageId, String eventFilter, String profileId) {
-		Job job = new Job(pageId);
-		job.setPageId(pageId);
+	public synchronized void addJob(String id, String eventFilter, boolean shouldMail, boolean shouldSms,
+			boolean shouldAttend, String profileId) {
+		Job job = new Job(id);
+		job.setPageId(id);
 		job.setEventFilter(eventFilter);
 
 		job.setSubscriber(configuration.getProfiles().stream().filter(p -> Objects.equals(p.getId(), profileId))
@@ -76,6 +77,24 @@ public class FBWatcherConfiguration {
 	@SuppressWarnings("unchecked")
 	public synchronized Set<Job> retrieveJobs() {
 		return (Set<Job>) SerializationUtils.deserialize(SerializationUtils.serialize(configuration.getJobs()));
+	}
+
+	public synchronized void defineShouldMail(String jobId, boolean shouldMail) {
+		configuration.getJobs().stream().filter(j -> Objects.equals(j.getId(), jobId)).findFirst()
+				.ifPresent(j -> j.setShouldMail(shouldMail));
+		XmlFileUtils.writeToFile(configuration, fullConfigFilePath);
+	}
+
+	public synchronized void defineShouldAttend(String jobId, boolean shouldAttend) {
+		configuration.getJobs().stream().filter(j -> Objects.equals(j.getId(), jobId)).findFirst()
+				.ifPresent(j -> j.setShouldAttend(shouldAttend));
+		XmlFileUtils.writeToFile(configuration, fullConfigFilePath);
+	}
+
+	public synchronized void defineShouldSms(String jobId, boolean shouldSms) {
+		configuration.getJobs().stream().filter(j -> Objects.equals(j.getId(), jobId)).findFirst()
+				.ifPresent(j -> j.setShouldSms(shouldSms));
+		XmlFileUtils.writeToFile(configuration, fullConfigFilePath);
 	}
 
 }

@@ -18,6 +18,9 @@ public class Job implements Serializable {
 	private String id;
 	private String pageId;
 	private String eventFilter;
+	private boolean shouldMail;
+	private boolean shouldSms;
+	private boolean shouldAttend;
 	private Profile subscriber;
 
 	public Job(String jobId) {
@@ -54,6 +57,33 @@ public class Job implements Serializable {
 
 	public void setEventFilter(String eventFilter) {
 		this.eventFilter = eventFilter;
+	}
+
+	@XmlElement
+	public boolean isShouldMail() {
+		return shouldMail;
+	}
+
+	public void setShouldMail(boolean shouldMail) {
+		this.shouldMail = shouldMail;
+	}
+
+	@XmlElement
+	public boolean isShouldSms() {
+		return shouldSms;
+	}
+
+	public void setShouldSms(boolean shouldSms) {
+		this.shouldSms = shouldSms;
+	}
+
+	@XmlElement
+	public boolean isShouldAttend() {
+		return shouldAttend;
+	}
+
+	public void setShouldAttend(boolean shouldAttend) {
+		this.shouldAttend = shouldAttend;
 	}
 
 	@XmlIDREF

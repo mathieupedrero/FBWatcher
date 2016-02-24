@@ -23,9 +23,9 @@ import org.springframework.social.facebook.api.Facebook;
 import org.springframework.stereotype.Controller;
 
 @Controller
-public class TimerExecutor {
+public class JobExecutor {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(TimerExecutor.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(JobExecutor.class);
 
 	@Autowired
 	private RecipientsNotifier notifier;
@@ -68,26 +68,16 @@ public class TimerExecutor {
 	@Value("${messages.end.message}")
 	private String endMessage;
 
-	@Value("${facebook.should_attend}")
-	private Boolean shouldAttend;
-
-	@Value("${notification.should_mail}")
-	private Boolean shouldMail;
-
-	@Value("${notification.should_sms}")
-	private Boolean shouldSms;
-
 	@Scheduled(cron = "*/5 * * * * ?")
-	public void demoServiceMethod() {
+	public synchronized void demoServiceMethod() {
 		for (Job job : configuration.retrieveJobs()) {
-			Profile subscriber = job.getSubscriber();
 			final RuntimeJobData runtime = runtimeData.getOrDefault(job, new RuntimeJobData());
 			if (!runtimeData.containsValue(job)) {
 				feedRuntimeForJob(runtime, job);
 				runtimeData.put(job, runtime);
 			}
 			if (runtime.isFirstWatch()) {
-				notifyBeginning(runtime.getPageName(), job.getSubscriber());
+				notifyBeginning(runtime.getPageName(), job);
 				runtime.setFirstWatch(false);
 			}
 			if (runtime.getUserFacebook() != null) {
@@ -106,13 +96,13 @@ public class TimerExecutor {
 
 					for (Event event : newFutureEvents) {
 						if (newFutureFilteredEvents.contains(event)) {
-							if (shouldAttend) {
+							if (job.isShouldAttend()) {
 								userFacebook.eventOperations().acceptInvitation(event.getId());
 							}
 							notifyFilteredEvent(runtime.getPageName(), event.getName(), event.getStartTime(),
-									runtime.getUserName(), subscriber);
+									runtime.getUserName(), job);
 						} else {
-							notifyNewEvent(runtime.getPageName(), event.getName(), event.getStartTime(), subscriber);
+							notifyNewEvent(runtime.getPageName(), event.getName(), event.getStartTime(), job);
 						}
 					}
 
@@ -145,37 +135,44 @@ public class TimerExecutor {
 		return e.getName().toLowerCase().contains(eventFilter.toLowerCase());
 	}
 
-	private void notifyBeginning(String pageName, Profile profile) {
+	private void notifyBeginning(String pageName, Job job) {
 		String title = MessageFormat.format(beginningTitle, pageName);
 		String message = MessageFormat.format(beginningMessage, pageName);
-		notify(title, message, profile);
+		notify(title, message, job);
 	}
 
-	private void notifyNewEvent(String pageName, String eventName, Date eventDate, Profile profile) {
+	private void notifyNewEvent(String pageName, String eventName, Date eventDate, Job job) {
 		String title = MessageFormat.format(newEventTitle, eventName);
 		String message = MessageFormat.format(newEventMessage, pageName, eventName, eventDate);
-		notify(title, message, profile);
+		notify(title, message, job);
 	}
 
-	private void notifyFilteredEvent(String pageName, String eventName, Date eventDate, String user, Profile profile) {
+	private void notifyFilteredEvent(String pageName, String eventName, Date eventDate, String user, Job job) {
 		String title = MessageFormat.format(newFilteredTitle, eventFilter, eventName);
 		String message = MessageFormat.format(newFilteredMessage, pageName, eventFilter, eventName, eventDate, user);
-		notify(title, message, profile);
+		notify(title, message, job);
 	}
 
-	protected void notifyEnd(String pageName, Profile profile) {
+	protected void notifyEnd(String pageName, Job job) {
 		String title = MessageFormat.format(endTitle, pageName);
 		String message = MessageFormat.format(endMessage, pageName);
-		notify(title, message, profile);
+		notify(title, message, job);
 	}
 
-	private void notify(String title, String message, Profile profile) {
+	private void notify(String title, String message, Job job) {
 		LOGGER.info(message);
-		if (shouldMail) {
-			notifier.notifyMail(title, message, profile.getMailAddresses());
+		Profile subscriber = job.getSubscriber();
+		if (job.isShouldMail()) {
+			notifier.notifyMail(title, message, subscriber.getMailAddresses());
 		}
-		if (shouldSms) {
-			notifier.notifyRest(message, profile.getFreeRestAddresses());
+		if (job.isShouldSms()) {
+			notifier.notifyRest(message, subscriber.getFreeRestAddresses());
 		}
+	}
+
+	public synchronized List<JobDescription> gecDescriptionsOfCurrentJobs() {
+		return configuration.retrieveJobs().stream()
+				.map(JobDescriptionGenerator.getForFacebook(facebookUtils.getApplicationFacebook()))
+				.collect(Collectors.toList());
 	}
 }

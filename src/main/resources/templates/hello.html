@@ -1,10 +1,29 @@
+<!DOCTYPE html>
 <html>
-	<head>
-		<title th:text="#{label.hello.title}"></title>
-	</head>
-	<body>
-		<h3>Hello, <span>Some User</span>!</h3>
-
-		<h4>Here is your home feed:</h4>
-	</body>
+<head>
+	<meta charset="utf-8"></meta>
+	<title th:text="#{hello.title}"></title>
+</head>
+<body>
+	<h1 th:text="#{hello.title}"></h1>
+	<table>
+		<caption th:text="#{hello.current_jobs}"></caption>
+		<tr>
+			<th th:text="#{hello.jobs_table.page_name}"></th>
+			<th th:text="#{hello.jobs_table.event_filter}"></th>
+			<th th:text="#{hello.jobs_table.subscriber}"></th>
+			<th th:text="#{hello.jobs_table.should_mail}"></th>
+			<th th:text="#{hello.jobs_table.should_sms}"></th>
+			<th th:text="#{hello.jobs_table.should_attend}"></th>
+		</tr>
+		<tr th:each="job : ${jobs}">
+			<td th:text="${job.pageName}"></td>
+			<td th:text="${job.eventFilter}"></td>
+			<td th:text="${job.subscriberName}"></td>
+			<td><span th:text="${job.shouldMail}? #{common.yes} : #{common.no}"></span> <a th:href="'/'+${job.jobId}+'/should-mail/'+!${job.shouldMail}" th:text="${job.shouldMail}? #{common.de_activate} : #{common.activate}"></a></td>
+			<td><span  th:text="${job.shouldSms}? #{common.yes} : #{common.no}"></span> <a th:href="'/'+${job.jobId}+'/should-sms/'+!${job.shouldSms}" th:text="${job.shouldSms}? #{common.de_activate} : #{common.activate}"></a></td>
+			<td><span  th:text="${job.shouldAttend}? #{common.yes} : #{common.no}"></span> <a th:href="'/'+${job.jobId}+'/should-attend/'+!${job.shouldAttend}" th:text="${job.shouldAttend}? #{common.de_activate} : #{common.activate}"></a></td>
+		</tr>
+	</table>
+</body>
 </html>
