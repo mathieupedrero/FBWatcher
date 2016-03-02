@@ -61,9 +61,9 @@ task deploy << {
   ssh.run {
     session(remotes.raspberrypi) {
       put from: 'build/libs/fb-watcher-1.0.jar', into: 'deliveries'
-      executeSudo '/opt/FbWatcher/bin/fbwatcherd stop'
+      executeSudo 'systemctl stop fbwatcherd'
       executeSudo 'mv /home/pi/deliveries/fb-watcher-1.0.jar /opt/FbWatcher/bin/fb-watcher.jar'
-      executeSudo '/opt/FbWatcher/bin/fbwatcherd start'
+      executeSudo 'systemctl start fbwatcherd'
     }
   }
 }
