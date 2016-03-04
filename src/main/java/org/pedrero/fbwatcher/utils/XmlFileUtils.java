@@ -32,6 +32,8 @@ public class XmlFileUtils {
 			existingFile.createNewFile();
 			JAXBContext context = JAXBContext.newInstance(properties.getClass()); // 1
 			Marshaller marshaller = context.createMarshaller();
+			marshaller.setAdapter(LocalDateTimeAdapter.class, new LocalDateTimeAdapter());
+			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 			marshaller.marshal(properties, existingFile);
 		} catch (JAXBException e) {
 			LOGGER.error("Jaxb error", e);
@@ -51,6 +53,7 @@ public class XmlFileUtils {
 		try {
 			JAXBContext context = JAXBContext.newInstance(configClass);
 			Unmarshaller unmarshaller = context.createUnmarshaller();
+			unmarshaller.setAdapter(LocalDateTimeAdapter.class, new LocalDateTimeAdapter());
 			configuration = (T) unmarshaller.unmarshal(new FileReader(existingFile));
 		} catch (FileNotFoundException e) {
 			LOGGER.error("File not found error", e);

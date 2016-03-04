@@ -1,7 +1,7 @@
 package org.pedrero.fbwatcher.config;
 
 import java.text.MessageFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -40,7 +40,7 @@ public class FBWatcherConfiguration {
 		XmlFileUtils.writeToFile(configuration, fullConfigFilePath);
 	}
 
-	public synchronized void addTokenToProfile(String token, Date expiracy, String profileId) {
+	public synchronized void addTokenToProfile(String token, LocalDateTime expiracy, String profileId) {
 		Token tokenObject = new Token(token);
 		tokenObject.setExpiracy(expiracy);
 

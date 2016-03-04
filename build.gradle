@@ -47,6 +47,7 @@ dependencies {
     compile 'javax.mail:javax.mail-api:1.5.2'
     compile 'com.sun.mail:javax.mail:1.5.2'
     compile 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    compile 'org.thymeleaf.extras:thymeleaf-extras-java8time:2.1.0.RELEASE'
     compile 'org.springframework.boot:spring-boot-starter-mail'
     compile 'org.springframework.social:spring-social-facebook'
 }

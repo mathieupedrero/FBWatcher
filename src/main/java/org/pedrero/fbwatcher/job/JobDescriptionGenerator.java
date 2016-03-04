@@ -32,6 +32,7 @@ public class JobDescriptionGenerator {
 			if (subscriber.getToken() != null) {
 				description.setSubscriberName(FacebookUtils.buildFor(subscriber.getToken().getToken()).userOperations()
 						.getUserProfile().getName());
+				description.setTokenExpiracy(subscriber.getToken().getExpiration());
 			}
 		}
 		return description;

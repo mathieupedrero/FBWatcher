@@ -1,13 +1,15 @@
 package org.pedrero.fbwatcher.config;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import org.pedrero.fbwatcher.utils.LocalDateTimeAdapter;
 
 @XmlRootElement
 public class Token implements Serializable {
@@ -16,7 +18,7 @@ public class Token implements Serializable {
 	 */
 	private static final long serialVersionUID = -6896083302298328376L;
 	private String token;
-	private Date expiration;
+	private LocalDateTime expiration;
 
 	public Token() {
 		super();
@@ -37,12 +39,12 @@ public class Token implements Serializable {
 	}
 
 	@XmlElement
-	@XmlSchemaType(name = "datetime")
-	public Date getExpiration() {
+	@XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
+	public LocalDateTime getExpiration() {
 		return expiration;
 	}
 
-	public void setExpiracy(Date expiration) {
+	public void setExpiracy(LocalDateTime expiration) {
 		this.expiration = expiration;
 	}
 

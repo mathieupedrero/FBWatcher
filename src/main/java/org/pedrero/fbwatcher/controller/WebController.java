@@ -1,8 +1,7 @@
 package org.pedrero.fbwatcher.controller;
 
 import java.text.MessageFormat;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.pedrero.fbwatcher.communication.CommunicationService;
@@ -103,9 +102,8 @@ public class WebController {
 		Facebook userFacebook = FacebookUtils.buildFor(token.getAccessToken());
 		String userId = userFacebook.userOperations().getUserProfile().getId();
 		configuration.addProfile(userId, mailAddressesToNotify, restClientsToNotify);
-		Calendar predictedExpliracy = new GregorianCalendar();
-		predictedExpliracy.add(Calendar.SECOND, token.getExpiresIn().intValue());
-		configuration.addTokenToProfile(token.getAccessToken(), predictedExpliracy.getTime(), userId);
+		configuration.addTokenToProfile(token.getAccessToken(), LocalDateTime.now().plusSeconds(token.getExpiresIn()),
+				userId);
 		configuration.addJob(pageToWatchID, eventFilter, shouldMail, shouldSms, shouldAttend, userId);
 		return new RedirectView("/");
 	}

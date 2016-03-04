@@ -1,5 +1,6 @@
 package org.pedrero.fbwatcher.job;
 
+import java.time.LocalDateTime;
 
 public class JobDescription {
 
@@ -11,6 +12,7 @@ public class JobDescription {
 	private boolean shouldMail;
 	private boolean shouldSms;
 	private boolean shouldAttend;
+	private LocalDateTime tokenExpiracy;
 
 	public String getJobId() {
 		return jobId;
@@ -74,6 +76,14 @@ public class JobDescription {
 
 	public void setShouldAttend(boolean shouldAttend) {
 		this.shouldAttend = shouldAttend;
+	}
+
+	public LocalDateTime getTokenExpiracy() {
+		return tokenExpiracy;
+	}
+
+	public void setTokenExpiracy(LocalDateTime tokenExpiracy) {
+		this.tokenExpiracy = tokenExpiracy;
 	}
 
 }
