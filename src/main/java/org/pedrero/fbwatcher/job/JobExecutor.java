@@ -25,7 +25,8 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class JobExecutor {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JobExecutor.class);
+	private static final Logger LOGGER = LoggerFactory
+			.getLogger(JobExecutor.class);
 
 	@Autowired
 	private RecipientsNotifier notifier;
@@ -71,43 +72,57 @@ public class JobExecutor {
 	@Scheduled(cron = "*/5 * * * * ?")
 	public synchronized void demoServiceMethod() {
 		for (Job job : configuration.retrieveJobs()) {
-			final RuntimeJobData runtime = runtimeData.getOrDefault(job, new RuntimeJobData());
+			final RuntimeJobData runtime = runtimeData.getOrDefault(job,
+					new RuntimeJobData());
 			if (!runtimeData.containsValue(job)) {
 				feedRuntimeForJob(runtime, job);
 				runtimeData.put(job, runtime);
 			}
 			if (runtime.isFirstWatch()) {
 				notifyBeginning(runtime.getPageName(), job);
-				runtime.setFirstWatch(false);
 			}
 			if (runtime.getUserFacebook() != null) {
 				Facebook userFacebook = runtime.getUserFacebook();
 				if (userFacebook.isAuthorized()) {
 
-					List<Event> newFutureEvents = userFacebook.fetchConnections(pageWatchedId, "events", Event.class)
-							.stream().filter(e -> e.getStartTime().after(new java.util.Date()))
-							.filter(e -> !runtime.getAllreadyNotifiedEvents().contains(e.getId()))
+					List<Event> newFutureEvents = userFacebook
+							.fetchConnections(pageWatchedId, "events",
+									Event.class)
+							.stream()
+							.filter(e -> e.getStartTime().after(
+									new java.util.Date()))
+							.filter(e -> !runtime.getAllreadyNotifiedEvents()
+									.contains(e.getId()))
 							.collect(Collectors.toList());
 
-					newFutureEvents.forEach(e -> runtime.getAllreadyNotifiedEvents().add(e.getId()));
+					newFutureEvents.forEach(e -> runtime
+							.getAllreadyNotifiedEvents().add(e.getId()));
 
-					List<Event> newFutureFilteredEvents = newFutureEvents.stream()
-							.filter(e -> eventNameMatchesFilter(e)).collect(Collectors.toList());
+					List<Event> newFutureFilteredEvents = newFutureEvents
+							.stream().filter(e -> eventNameMatchesFilter(e))
+							.collect(Collectors.toList());
 
-					for (Event event : newFutureEvents) {
-						if (newFutureFilteredEvents.contains(event)) {
-							if (job.isShouldAttend()) {
-								userFacebook.eventOperations().acceptInvitation(event.getId());
+					if (!runtime.isFirstWatch()) {
+						for (Event event : newFutureEvents) {
+							if (newFutureFilteredEvents.contains(event)) {
+								if (job.isShouldAttend()) {
+									userFacebook.eventOperations()
+											.acceptInvitation(event.getId());
+								}
+								notifyFilteredEvent(runtime.getPageName(),
+										event.getName(), event.getStartTime(),
+										runtime.getUserName(), job);
+							} else {
+								notifyNewEvent(runtime.getPageName(),
+										event.getName(), event.getStartTime(),
+										job);
 							}
-							notifyFilteredEvent(runtime.getPageName(), event.getName(), event.getStartTime(),
-									runtime.getUserName(), job);
-						} else {
-							notifyNewEvent(runtime.getPageName(), event.getName(), event.getStartTime(), job);
 						}
 					}
 
 				}
 			}
+			runtime.setFirstWatch(false);
 		}
 	}
 
@@ -116,12 +131,16 @@ public class JobExecutor {
 		if (subscriber != null) {
 			Token token = subscriber.getToken();
 			if (token != null) {
-				Facebook userFacebook = FacebookUtils.buildFor(token.getToken());
+				Facebook userFacebook = FacebookUtils
+						.buildFor(token.getToken());
 				runtime.setUserFacebook(userFacebook);
-				runtime.setPageName(userFacebook.pageOperations().getPage(job.getPageId()).getName());
-				runtime.setUserName(userFacebook.userOperations().getUserProfile().getName());
+				runtime.setPageName(userFacebook.pageOperations()
+						.getPage(job.getPageId()).getName());
+				runtime.setUserName(userFacebook.userOperations()
+						.getUserProfile().getName());
 			} else {
-				LOGGER.warn("no valid token associated to user [{}]", subscriber.getId());
+				LOGGER.warn("no valid token associated to user [{}]",
+						subscriber.getId());
 			}
 			return runtime;
 		} else {
@@ -141,15 +160,20 @@ public class JobExecutor {
 		notify(title, message, job);
 	}
 
-	private void notifyNewEvent(String pageName, String eventName, Date eventDate, Job job) {
+	private void notifyNewEvent(String pageName, String eventName,
+			Date eventDate, Job job) {
 		String title = MessageFormat.format(newEventTitle, eventName);
-		String message = MessageFormat.format(newEventMessage, pageName, eventName, eventDate);
+		String message = MessageFormat.format(newEventMessage, pageName,
+				eventName, eventDate);
 		notify(title, message, job);
 	}
 
-	private void notifyFilteredEvent(String pageName, String eventName, Date eventDate, String user, Job job) {
-		String title = MessageFormat.format(newFilteredTitle, eventFilter, eventName);
-		String message = MessageFormat.format(newFilteredMessage, pageName, eventFilter, eventName, eventDate, user);
+	private void notifyFilteredEvent(String pageName, String eventName,
+			Date eventDate, String user, Job job) {
+		String title = MessageFormat.format(newFilteredTitle, eventFilter,
+				eventName);
+		String message = MessageFormat.format(newFilteredMessage, pageName,
+				eventFilter, eventName, eventDate, user);
 		notify(title, message, job);
 	}
 
@@ -171,8 +195,11 @@ public class JobExecutor {
 	}
 
 	public synchronized List<JobDescription> gecDescriptionsOfCurrentJobs() {
-		return configuration.retrieveJobs().stream()
-				.map(JobDescriptionGenerator.getForFacebook(facebookUtils.getApplicationFacebook()))
+		return configuration
+				.retrieveJobs()
+				.stream()
+				.map(JobDescriptionGenerator.getForFacebook(facebookUtils
+						.getApplicationFacebook()))
 				.collect(Collectors.toList());
 	}
 }
