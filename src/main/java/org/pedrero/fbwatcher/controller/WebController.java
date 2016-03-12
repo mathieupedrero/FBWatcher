@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.pedrero.fbwatcher.communication.CommunicationService;
 import org.pedrero.fbwatcher.config.FBWatcherConfiguration;
+import org.pedrero.fbwatcher.config.Profile;
 import org.pedrero.fbwatcher.facebook.FacebookUtils;
 import org.pedrero.fbwatcher.facebook.FacebookUtils.FacebookAccessToken;
 import org.pedrero.fbwatcher.job.JobExecutor;
@@ -25,7 +26,8 @@ import org.springframework.web.servlet.view.RedirectView;
 @RequestMapping("/")
 public class WebController {
 
-	private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(WebController.class);
+	private static final org.slf4j.Logger LOGGER = LoggerFactory
+			.getLogger(WebController.class);
 
 	@Autowired
 	private CommunicationService communicationService;
@@ -84,13 +86,18 @@ public class WebController {
 	@RequestMapping(method = RequestMethod.GET)
 	public String helloFacebook(Model model) {
 		if (configuration.retrieveJobs().isEmpty()) {
-			return MessageFormat.format("redirect:{0}",
-					CommunicationService.computeUrl(loginUrl, appId, redirectUri, requiredScopes));
+			return MessageFormat
+					.format("redirect:{0}", computeInvokeLoginUrl());
 		}
 
 		model.addAttribute("jobs", jobExecutor.gecDescriptionsOfCurrentJobs());
 
 		return "hello";
+	}
+
+	private String computeInvokeLoginUrl() {
+		return CommunicationService.computeUrl(loginUrl, appId, redirectUri,
+				requiredScopes);
 	}
 
 	@RequestMapping(value = "/myFacebook", method = RequestMethod.GET, params = "code")
@@ -101,15 +108,18 @@ public class WebController {
 		FacebookAccessToken token = facebookUtils.retrieveTokenFor(code);
 		Facebook userFacebook = FacebookUtils.buildFor(token.getAccessToken());
 		String userId = userFacebook.userOperations().getUserProfile().getId();
-		configuration.addProfile(userId, mailAddressesToNotify, restClientsToNotify);
-		configuration.addTokenToProfile(token.getAccessToken(), LocalDateTime.now().plusSeconds(token.getExpiresIn()),
-				userId);
-		configuration.addJob(pageToWatchID, eventFilter, shouldMail, shouldSms, shouldAttend, userId);
+		configuration.addProfile(userId, mailAddressesToNotify,
+				restClientsToNotify);
+		configuration.addTokenToProfile(token.getAccessToken(), LocalDateTime
+				.now().plusSeconds(token.getExpiresIn()), userId);
+		configuration.addJob(pageToWatchID, eventFilter, shouldMail, shouldSms,
+				shouldAttend, userId);
 		return new RedirectView("/");
 	}
 
 	@RequestMapping(value = "/{jobId}/should-mail/{value}", method = RequestMethod.GET)
-	public RedirectView changeShouldMail(@PathVariable("jobId") String jobId, @PathVariable("value") Boolean shouldMail) {
+	public RedirectView changeShouldMail(@PathVariable("jobId") String jobId,
+			@PathVariable("value") Boolean shouldMail) {
 		configuration.defineShouldMail(jobId, shouldMail);
 		return new RedirectView("/");
 	}
@@ -122,8 +132,23 @@ public class WebController {
 	}
 
 	@RequestMapping(value = "/{jobId}/should-sms/{value}", method = RequestMethod.GET)
-	public RedirectView changeShouldSms(@PathVariable("jobId") String jobId, @PathVariable("value") Boolean shouldSms) {
+	public RedirectView changeShouldSms(@PathVariable("jobId") String jobId,
+			@PathVariable("value") Boolean shouldSms) {
 		configuration.defineShouldSms(jobId, shouldSms);
+		return new RedirectView("/");
+	}
+
+	@RequestMapping(value = "/{subscriberId}/refresh-token", method = RequestMethod.GET)
+	public RedirectView refreshTokenFor(
+			@PathVariable("subscriberId") String subscriberId) {
+		Profile profile = configuration.retrieveProfile(subscriberId);
+		if (profile == null || profile.getToken() == null) {
+			return new RedirectView("/");
+		}
+		FacebookAccessToken token = facebookUtils.refreshToken(profile
+				.getToken().getToken());
+		configuration.addTokenToProfile(token.getAccessToken(), LocalDateTime
+				.now().plusSeconds(token.getExpiresIn()), subscriberId);
 		return new RedirectView("/");
 	}
 }

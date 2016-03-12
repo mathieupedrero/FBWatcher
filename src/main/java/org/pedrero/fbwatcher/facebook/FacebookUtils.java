@@ -26,6 +26,9 @@ public class FacebookUtils {
 	@Value("${facebook.get_token_url}")
 	private String getTokenUrl;
 
+	@Value("${facebook.get_long_lived_token_url}")
+	private String refreshTokenUrl;
+
 	@Value("${facebook.app.id}")
 	private String appId;
 
@@ -36,7 +39,8 @@ public class FacebookUtils {
 
 	@PostConstruct
 	private void postConstruct() {
-		applicationFacebook = new FacebookTemplate(MessageFormat.format("{0}|{1}", appId, appSecret));
+		applicationFacebook = new FacebookTemplate(MessageFormat.format(
+				"{0}|{1}", appId, appSecret));
 	}
 
 	public Facebook buildFacebookForToken(String token) {
@@ -44,14 +48,16 @@ public class FacebookUtils {
 	}
 
 	public FacebookAccessToken refreshToken(String token) {
-		FacebookAccessToken facebookAccessToken = communicationService.getForObject(getTokenUrl,
-				FacebookAccessToken.class, appId, redirectUri, appSecret, token);
+		FacebookAccessToken facebookAccessToken = communicationService
+				.getForObject(refreshTokenUrl, FacebookAccessToken.class,
+						appId, appSecret, token);
 		return facebookAccessToken;
 	}
 
 	public FacebookAccessToken retrieveTokenFor(String code) {
-		FacebookAccessToken facebookAccessToken = communicationService.getForObject(getTokenUrl,
-				FacebookAccessToken.class, appId, redirectUri, appSecret, code);
+		FacebookAccessToken facebookAccessToken = communicationService
+				.getForObject(getTokenUrl, FacebookAccessToken.class, appId,
+						redirectUri, appSecret, code);
 		return facebookAccessToken;
 	}
 

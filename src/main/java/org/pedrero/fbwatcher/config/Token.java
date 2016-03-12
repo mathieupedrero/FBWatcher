@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -12,12 +14,18 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import org.pedrero.fbwatcher.utils.LocalDateTimeAdapter;
 
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Token implements Serializable {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -6896083302298328376L;
+
+	@XmlAttribute
 	private String token;
+
+	@XmlElement
+	@XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
 	private LocalDateTime expiration;
 
 	public Token() {
@@ -29,7 +37,6 @@ public class Token implements Serializable {
 		this.token = token;
 	}
 
-	@XmlAttribute
 	public String getToken() {
 		return token;
 	}
@@ -38,8 +45,6 @@ public class Token implements Serializable {
 		this.token = token;
 	}
 
-	@XmlElement
-	@XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
 	public LocalDateTime getExpiration() {
 		return expiration;
 	}
